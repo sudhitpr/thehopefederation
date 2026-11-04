@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Registration Details{% endblock %}
+{% block page_title %}Registration Record{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('registrations.index') }}" class="btn btn-secondary btn-sm">&larr; Back to Registrations</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    <!-- Main Details Column -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 style="font-size: 1.35rem; color: var(--text-primary); margin-bottom: 0.25rem;">
+                        {% if reg.registration_type == 'partner' and reg.organization_name %}
+                            {{ reg.organization_name }}
+                        {% else %}
+                            {{ reg.name }}
+                        {% endif %}
+                    </h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem;">
+                        {% if reg.registration_type == 'partner' %}
+                            <span class="badge badge-partner">Partner</span>
+                        {% else %}
+                            <span class="badge badge-volunteer">Volunteer</span>
+                        {% endif %}
+                        <span class="badge badge-{{ reg.status }}">{{ reg.status|capitalize }}</span>
+                        <span style="font-size: 0.775rem; color: var(--text-muted);">
+                            Submitted on {{ reg.created_at.strftime('%B %d, %Y at %H:%M') if reg.created_at else '-' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+                <div>
+                    <span class="form-label">Contact Person</span>
+                    <div style="font-weight: 500;">{{ reg.name }}</div>
+                </div>
+                <div>
+                    <span class="form-label">Email Address</span>
+                    <div><a href="mailto:{{ reg.email }}" style="color: var(--accent-cyan); text-decoration: none;">{{ reg.email }}</a></div>
+                </div>
+                <div>
+                    <span class="form-label">Phone Number</span>
+                    <div><a href="tel:{{ reg.phone }}" style="color: var(--text-primary); text-decoration: none;">{{ reg.phone }}</a></div>
+                </div>
+                <div>
+                    <span class="form-label">Address / Location</span>
+                    <div>
+                        {{ reg.address or '' }}
+                        {% if reg.city %}<br>{{ reg.city }}{% endif %}{% if reg.state %}, {{ reg.state }}{% endif %}{% if reg.country %} ({{ reg.country }}){% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specific Fields by Registration Type -->
+            {% if reg.registration_type == 'partner' %}
+                <h4 style="font-size: 0.95rem; margin: 1.5rem 0 1rem 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--accent-cyan);">
+                    Partner Organization Details
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <span class="form-label">Organization Name</span>
+                        <div>{{ reg.organization_name }}</div>
+                    </div>
+                    <div>
+                        <span class="form-label">Organization Type</span>
+                        <div>{{ reg.organization_type or 'Not specified' }}</div>
+                    </div>
+                    <div>
+                        <span class="form-label">Website</span>
+                        <div>
+                            {% if reg.website %}
+                                <a href="{{ reg.website }}" target="_blank" style="color: var(--accent-cyan);">{{ reg.website }}</a>
+                            {% else %}
+                                Not provided
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="form-label">Area of Partnership</span>
+                        <div>{{ reg.area_of_partnership or 'General' }}</div>
+                    </div>
+                </div>
+            {% else %}
+                <h4 style="font-size: 0.95rem; margin: 1.5rem 0 1rem 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--accent-cyan);">
+                    Volunteer Profile & Skills
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <span class="form-label">Occupation</span>
+                        <div>{{ reg.occupation or 'Not specified' }}</div>
+                    </div>
+                    <div>
+                        <span class="form-label">Availability</span>
+                        <div>{{ reg.availability or 'Flexible' }}</div>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <span class="form-label">Skills & Expertise</span>
+                        <div>{{ reg.skills or 'General support' }}</div>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <span class="form-label">Preferred Activities</span>
+                        <div>{{ reg.preferred_activities or 'Any' }}</div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if reg.message %}
+                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <span class="form-label">Message / Additional Comments</span>
+                    <p style="background: rgba(0, 0, 0, 0.2); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary);">
+                        {{ reg.message }}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Internal Notes Timeline -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Internal Administrative Notes</h3>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                {% for note in reg.notes %}
+                    <div style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid var(--accent-blue); padding: 0.75rem 1rem; margin-bottom: 0.75rem; border-radius: var(--radius-sm);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-size: 0.775rem;">
+                            <span style="font-weight: 600; color: var(--text-primary);">{{ note.author_name }}</span>
+                            <span style="color: var(--text-muted);">{{ note.created_at.strftime('%b %d, %Y %H:%M') if note.created_at else '' }}</span>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0;">{{ note.note }}</p>
+                    </div>
+                {% else %}
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">No administrative notes added yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Add Note Form -->
+            <form method="POST" action="{{ url_for('registrations.add_note', reg_id=reg._id) }}">
+                <div class="form-group">
+                    <label class="form-label" for="note">Add New Note</label>
+                    <textarea class="form-control" id="note" name="note" rows="3" required placeholder="Record contact attempt, interview notes, or decisions..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm">Add Note</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar Actions Column -->
+    <div>
+        <!-- Update Status Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Update Status</h3>
+            </div>
+            <form method="POST" action="{{ url_for('registrations.update_status', reg_id=reg._id) }}">
+                <div class="form-group">
+                    <label class="form-label" for="status">Current Status</label>
+                    <select class="form-control" id="status" name="status">
+                        {% for st in valid_statuses %}
+                            <option value="{{ st }}" {% if reg.status == st %}selected{% endif %}>{{ st|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Update Status</button>
+            </form>
+        </div>
+
+        <!-- Super Admin Danger Zone -->
+        {% if current_user.role == 'Super Admin' %}
+        <div class="card" style="border-color: rgba(244, 63, 94, 0.3);">
+            <div class="card-header">
+                <h3 class="card-title" style="color: #fb7185;">Delete Record</h3>
+            </div>
+            <p style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Permanently purge this registration from the database. This action is audited.
+            </p>
+            <form method="POST" action="{{ url_for('registrations.delete', reg_id=reg._id) }}" onsubmit="return confirm('Permanently delete this registration?');">
+                <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center;">Delete Registration</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

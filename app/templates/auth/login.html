@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Sign In - Hope Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <style>
+        body {
+            background-color: var(--bg-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 2.5rem;
+            box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+        .login-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #000;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-header">
+            <div class="brand-icon">H</div>
+            <div>
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0;">Hope Care Admin</h2>
+                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Authorized Access Only</span>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+            <div class="form-group">
+                <label class="form-label" for="email">Admin Email Address</label>
+                <input class="form-control" type="email" id="email" name="email" required placeholder="admin@example.org" value="{{ email or '' }}" autofocus>
+            </div>
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                    <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
+                    <a href="{{ url_for('auth.forgot_password') }}" style="color: var(--accent-cyan); font-size: 0.775rem; text-decoration: none;">Forgot password?</a>
+                </div>
+                <input class="form-control" type="password" id="password" name="password" required placeholder="••••••••">
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+                <input type="checkbox" id="remember" name="remember" value="true">
+                <label for="remember" style="font-size: 0.825rem; color: var(--text-secondary); cursor: pointer;">Remember this session</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.75rem;">Sign In</button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <a href="{{ url_for('public.index') }}" style="color: var(--text-muted); font-size: 0.8rem; text-decoration: none;">&larr; Return to Public Portal</a>
+        </div>
+    </div>
+</body>
+</html>

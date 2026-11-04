@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Operational Dashboard & Overview{% endblock %}
+
+{% block content %}
+<!-- Top Metrics Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Volunteer Registrations</div>
+        <div class="stat-value" style="color: #38bdf8;">{{ data.registrations.volunteers }}</div>
+        <div class="stat-desc">Community volunteers registered</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Partner Registrations</div>
+        <div class="stat-value" style="color: #c084fc;">{{ data.registrations.partners }}</div>
+        <div class="stat-desc">Partner organizations & churches</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Total Registrations</div>
+        <div class="stat-value">{{ data.registrations.total }}</div>
+        <div class="stat-desc">
+            <span class="badge badge-new" style="margin-right: 0.25rem;">{{ data.registrations.new }} New</span>
+            <span>{{ data.registrations.approved }} approved</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Total Prayer Requests</div>
+        <div class="stat-value" style="color: #a78bfa;">{{ data.prayer_requests.total }}</div>
+        <div class="stat-desc">
+            <span class="badge badge-new">{{ data.prayer_requests.new }} New</span>
+            <span>{{ data.prayer_requests.pending }} pending review</span>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Split Grid -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+    <!-- Recent Registrations Card -->
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Recent Registrations</h3>
+                <span style="font-size: 0.775rem; color: var(--text-muted);">Latest volunteer & partner submissions</span>
+            </div>
+            <a href="{{ url_for('registrations.index') }}" class="btn btn-secondary btn-sm">View All &rarr;</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Contact</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in data.recent_registrations %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">
+                                {% if reg.registration_type == 'partner' and reg.organization_name %}
+                                    {{ reg.organization_name }}
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Attn: {{ reg.name }}</div>
+                                {% else %}
+                                    {{ reg.name }}
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ reg.email }}</div>
+                        </td>
+                        <td>
+                            {% if reg.registration_type == 'partner' %}
+                                <span class="badge badge-partner">Partner</span>
+                            {% else %}
+                                <span class="badge badge-volunteer">Volunteer</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ reg.status }}">{{ reg.status|capitalize }}</span>
+                        </td>
+                        <td style="font-size: 0.775rem; color: var(--text-muted);">
+                            {{ reg.created_at.strftime('%b %d, %Y') if reg.created_at else '-' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                            No registrations recorded yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Prayer Requests Card -->
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Recent Prayer Requests</h3>
+                <span style="font-size: 0.775rem; color: var(--text-muted);">Confidential prayer requests queue</span>
+            </div>
+            <a href="{{ url_for('prayer_requests.index') }}" class="btn btn-secondary btn-sm">View All &rarr;</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Requester / Category</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prayer in data.recent_prayers %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; color: #a78bfa;">{{ prayer.category }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                {% if prayer.is_anonymous %}
+                                    <em>[Anonymous]</em>
+                                {% else %}
+                                    {{ prayer.name or 'Confidential' }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ prayer.status }}">{{ prayer.status|replace('_', ' ')|capitalize }}</span>
+                        </td>
+                        <td style="font-size: 0.775rem; color: var(--text-muted);">
+                            {{ prayer.created_at.strftime('%b %d, %Y') if prayer.created_at else '-' }}
+                        </td>
+                        <td style="text-align: right;">
+                            <a href="{{ url_for('prayer_requests.detail', req_id=prayer._id) }}" class="btn btn-secondary btn-sm">Review</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                            No prayer requests submitted yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
