@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Prayer Request Details{% endblock %}
+{% block page_title %}Confidential Prayer Request{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('prayer_requests.index') }}" class="btn btn-secondary btn-sm">&larr; Back to Prayer Requests</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    <!-- Main Column: Request Details & Notes -->
+    <div>
+        <!-- Prayer Request Card -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); font-size: 0.85rem;">
+                        {{ req.category }}
+                    </span>
+                    <span class="badge badge-{{ req.status }}" style="margin-left: 0.5rem;">
+                        {{ req.status|replace('_', ' ')|capitalize }}
+                    </span>
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                        Submitted on {{ req.created_at.strftime('%B %d, %Y at %H:%M') if req.created_at else '-' }}
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <span class="form-label" style="text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;">Prayer Petition</span>
+                <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-left: 4px solid #a78bfa; padding: 1.25rem; border-radius: var(--radius-sm); font-size: 1rem; line-height: 1.7; color: var(--text-primary); white-space: pre-wrap;">
+{{ req.request_text }}
+                </div>
+            </div>
+
+            <!-- Requester Contact Info -->
+            <h4 style="font-size: 0.95rem; margin: 1.5rem 0 1rem 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--accent-cyan);">
+                Requester Information
+            </h4>
+            
+            {% if req.is_anonymous %}
+                <div style="background: rgba(255, 255, 255, 0.02); padding: 1rem; border-radius: var(--radius-sm); color: var(--text-muted); font-size: 0.9rem;">
+                    🔒 <strong>Submitted Anonymously</strong> — The requester chose not to share their identity or contact details.
+                </div>
+            {% else %}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                    <div>
+                        <span class="form-label">Name</span>
+                        <div style="font-weight: 500;">{{ req.name or 'Not specified' }}</div>
+                    </div>
+                    <div>
+                        <span class="form-label">Preferred Contact Method</span>
+                        <div>{{ req.preferred_contact or 'None' }}</div>
+                    </div>
+                    <div>
+                        <span class="form-label">Email Address</span>
+                        <div>
+                            {% if req.email %}
+                                <a href="mailto:{{ req.email }}" style="color: var(--accent-cyan); text-decoration: none;">{{ req.email }}</a>
+                            {% else %}
+                                Not provided
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="form-label">Phone Number</span>
+                        <div>
+                            {% if req.phone %}
+                                <a href="tel:{{ req.phone }}" style="color: var(--text-primary); text-decoration: none;">{{ req.phone }}</a>
+                            {% else %}
+                                Not provided
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pastoral & Admin Notes Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Confidential Ministry Notes</h3>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                {% for note in req.notes %}
+                    <div style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid #a78bfa; padding: 0.75rem 1rem; margin-bottom: 0.75rem; border-radius: var(--radius-sm);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-size: 0.775rem;">
+                            <span style="font-weight: 600; color: var(--text-primary);">{{ note.author_name }}</span>
+                            <span style="color: var(--text-muted);">{{ note.created_at.strftime('%b %d, %Y %H:%M') if note.created_at else '' }}</span>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0;">{{ note.note }}</p>
+                    </div>
+                {% else %}
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">No ministry notes added yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Add Note Form -->
+            <form method="POST" action="{{ url_for('prayer_requests.add_note', req_id=req._id) }}">
+                <div class="form-group">
+                    <label class="form-label" for="note">Add Pastoral Note</label>
+                    <textarea class="form-control" id="note" name="note" rows="3" required placeholder="Record prayer updates, encouragement sent, or follow-up notes..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm">Save Note</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar Actions Column -->
+    <div>
+        <!-- Update Workflow Status Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Prayer Workflow</h3>
+            </div>
+            <form method="POST" action="{{ url_for('prayer_requests.update_status', req_id=req._id) }}">
+                <div class="form-group">
+                    <label class="form-label" for="status">Update Status</label>
+                    <select class="form-control" id="status" name="status">
+                        {% for st in valid_statuses %}
+                            <option value="{{ st }}" {% if req.status == st %}selected{% endif %}>{{ st|replace('_', ' ')|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.75rem;">Update Status</button>
+            </form>
+
+            <!-- Quick Transition Buttons -->
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                {% if req.status != 'praying' %}
+                <form method="POST" action="{{ url_for('prayer_requests.update_status', req_id=req._id) }}">
+                    <input type="hidden" name="status" value="praying">
+                    <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;">🙏 Move to 'Praying'</button>
+                </form>
+                {% endif %}
+
+                {% if req.status != 'completed' %}
+                <form method="POST" action="{{ url_for('prayer_requests.update_status', req_id=req._id) }}">
+                    <input type="hidden" name="status" value="completed">
+                    <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;">✓ Mark as Completed</button>
+                </form>
+                {% endif %}
+
+                {% if req.status != 'archived' %}
+                <form method="POST" action="{{ url_for('prayer_requests.archive', req_id=req._id) }}" onsubmit="return confirm('Archive this prayer request?');">
+                    <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;">📦 Move to Archive</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Super Admin Danger Zone -->
+        {% if current_user.role == 'Super Admin' %}
+        <div class="card" style="border-color: rgba(244, 63, 94, 0.3);">
+            <div class="card-header">
+                <h3 class="card-title" style="color: #fb7185;">Delete Request</h3>
+            </div>
+            <p style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Permanently purge this prayer request from the database.
+            </p>
+            <form method="POST" action="{{ url_for('prayer_requests.delete', req_id=req._id) }}" onsubmit="return confirm('Permanently delete this prayer request?');">
+                <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center;">Delete Request</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+# Environment and sensitive secrets
+.env
+.env.local
+.env.*.local
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
+
+# Python cache and byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Operating system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Archives and build artifacts
+Archive.zip
+*.zip
+*.tar.gz
+

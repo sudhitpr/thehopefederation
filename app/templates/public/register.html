@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Registration - Hope Portal</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #f1f5f9;
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+        .card {
+            max-width: 650px;
+            margin: 0 auto;
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        h2 { margin-top: 0; color: #38bdf8; }
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #94a3b8; }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            border-radius: 0.375rem;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+        .btn-submit {
+            background: #0284c7;
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .btn-submit:hover { background: #0369a1; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #94a3b8; text-decoration: none; font-size: 0.875rem; }
+        .back-link:hover { color: #38bdf8; }
+        .hidden { display: none; }
+        .alert { padding: 0.75rem 1rem; border-radius: 0.375rem; margin-bottom: 1rem; font-size: 0.875rem; }
+        .alert-success { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; }
+        .alert-error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <a href="/" class="back-link">&larr; Back to Home</a>
+        <h2>Community Registration</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem;">Join as a volunteer or register as a partner organization.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="/register" method="POST" id="registrationForm">
+            <div class="form-group">
+                <label for="registration_type">Registration Type *</label>
+                <select name="registration_type" id="registration_type" required onchange="toggleFormFields()">
+                    <option value="volunteer" {% if request.form.get('registration_type') != 'partner' %}selected{% endif %}>Volunteer</option>
+                    <option value="partner" {% if request.form.get('registration_type') == 'partner' %}selected{% endif %}>Partner</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="name" id="nameLabel">Full Name *</label>
+                <input type="text" name="name" id="name" required value="{{ request.form.get('name', '') }}">
+            </div>
+
+            <div id="partnerFields" class="hidden">
+                <div class="form-group">
+                    <label for="organization_name">Organization Name *</label>
+                    <input type="text" name="organization_name" id="organization_name" value="{{ request.form.get('organization_name', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="organization_type">Organization Type</label>
+                    <input type="text" name="organization_type" id="organization_type" placeholder="e.g. Non-profit, Church, Business, School" value="{{ request.form.get('organization_type', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="website">Website</label>
+                    <input type="url" name="website" id="website" placeholder="https://example.org" value="{{ request.form.get('website', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="area_of_partnership">Area of Partnership</label>
+                    <input type="text" name="area_of_partnership" id="area_of_partnership" placeholder="e.g. Community Outreach, Sponsorship, Logistics" value="{{ request.form.get('area_of_partnership', '') }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" name="email" id="email" required value="{{ request.form.get('email', '') }}">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number *</label>
+                <input type="tel" name="phone" id="phone" required value="{{ request.form.get('phone', '') }}">
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text" name="address" id="address" value="{{ request.form.get('address', '') }}">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" name="city" id="city" value="{{ request.form.get('city', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="state">State</label>
+                    <input type="text" name="state" id="state" value="{{ request.form.get('state', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <input type="text" name="country" id="country" value="{{ request.form.get('country', '') }}">
+                </div>
+            </div>
+
+            <div id="volunteerFields">
+                <div class="form-group">
+                    <label for="occupation">Occupation</label>
+                    <input type="text" name="occupation" id="occupation" value="{{ request.form.get('occupation', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="skills">Skills & Expertise</label>
+                    <input type="text" name="skills" id="skills" placeholder="e.g. Teaching, First Aid, Event Planning, Driving" value="{{ request.form.get('skills', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="availability">Availability</label>
+                    <input type="text" name="availability" id="availability" placeholder="e.g. Weekends, Evenings, Flexible" value="{{ request.form.get('availability', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="preferred_activities">Preferred Volunteering Activities</label>
+                    <input type="text" name="preferred_activities" id="preferred_activities" placeholder="e.g. Food Bank, Youth Mentoring, Relief" value="{{ request.form.get('preferred_activities', '') }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Additional Message / Notes</label>
+                <textarea name="message" id="message" rows="3">{{ request.form.get('message', '') }}</textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Submit Registration</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleFormFields() {
+            const type = document.getElementById('registration_type').value;
+            const partnerFields = document.getElementById('partnerFields');
+            const volunteerFields = document.getElementById('volunteerFields');
+            const nameLabel = document.getElementById('nameLabel');
+            const orgNameInput = document.getElementById('organization_name');
+
+            if (type === 'partner') {
+                partnerFields.classList.remove('hidden');
+                volunteerFields.classList.add('hidden');
+                nameLabel.innerText = 'Contact Person Name *';
+                orgNameInput.required = true;
+            } else {
+                partnerFields.classList.add('hidden');
+                volunteerFields.classList.remove('hidden');
+                nameLabel.innerText = 'Full Name *';
+                orgNameInput.required = false;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', toggleFormFields);
+    </script>
+</body>
+</html>

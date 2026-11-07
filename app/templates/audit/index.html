@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Trail{% endblock %}
+{% block page_title %}Security & Administrative Audit Logs{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Administrative Audit Trail</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Immutable security record of logins, role updates, status changes, and deletions</span>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="GET" action="{{ url_for('audit.index') }}" class="filter-bar">
+        <div class="filter-inputs">
+            <div>
+                <select name="module" class="form-control" style="width: auto; padding: 0.45rem 0.75rem;">
+                    <option value="">All Modules</option>
+                    {% for m in modules %}
+                        <option value="{{ m }}" {% if selected_module == m %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <input type="text" name="action" class="form-control" placeholder="Filter by action name..." value="{{ selected_action or '' }}" style="width: 200px; padding: 0.45rem 0.75rem;">
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+            {% if selected_module or selected_action %}
+                <a href="{{ url_for('audit.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+            {% endif %}
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Showing {{ logs|length }} of {{ pagination.total }} audit entries
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Module</th>
+                    <th>Action</th>
+                    <th>Admin User ID</th>
+                    <th>Record ID</th>
+                    <th>Context / Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">
+                        {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') if log.timestamp else '-' }}
+                    </td>
+                    <td>
+                        {% if log.module == 'AUTH' %}
+                            <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8;">AUTH</span>
+                        {% elif log.module == 'USERS' %}
+                            <span class="badge" style="background: rgba(244, 63, 94, 0.15); color: #fb7185;">USERS</span>
+                        {% elif log.module == 'REGISTRATIONS' %}
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">REGISTRATIONS</span>
+                        {% elif log.module == 'PRAYER_REQUESTS' %}
+                            <span class="badge" style="background: rgba(139, 92, 246, 0.15); color: #c084fc;">PRAYER_REQUESTS</span>
+                        {% else %}
+                            <span class="badge badge-secondary">{{ log.module }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <code style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.775rem; color: #f8fafc;">
+                            {{ log.action }}
+                        </code>
+                    </td>
+                    <td style="font-size: 0.775rem; color: var(--text-secondary); font-family: monospace;">
+                        {{ log.admin_user_id or 'System / Public' }}
+                    </td>
+                    <td style="font-size: 0.775rem; color: var(--text-secondary); font-family: monospace;">
+                        {{ log.record_id or '-' }}
+                    </td>
+                    <td style="font-size: 0.8rem; color: var(--text-secondary); max-width: 300px; word-break: break-all;">
+                        {% if log.context %}
+                            {% for k, v in log.context.items() %}
+                                <span style="color: var(--text-muted);">{{ k }}:</span> <strong style="color: var(--text-primary);">{{ v }}</strong>{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                        No audit log entries found matching criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.total_pages > 1 %}
+    <div class="pagination">
+        {% if pagination.page > 1 %}
+            <a href="{{ url_for('audit.index', page=pagination.page-1, module=selected_module, action=selected_action) }}" class="page-btn">&larr; Prev</a>
+        {% endif %}
+        <span style="font-size: 0.825rem; color: var(--text-muted);">Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+        {% if pagination.page < pagination.total_pages %}
+            <a href="{{ url_for('audit.index', page=pagination.page+1, module=selected_module, action=selected_action) }}" class="page-btn">Next &rarr;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

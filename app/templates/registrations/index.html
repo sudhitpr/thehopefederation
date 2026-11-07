@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Registrations{% endblock %}
+{% block page_title %}Registration Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Community Registrations</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Manage volunteers and partner organizations in one unified queue</span>
+        </div>
+        <a href="{{ url_for('public.register') }}" target="_blank" class="btn btn-secondary btn-sm">+ New Public Form &rarr;</a>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <form method="GET" action="{{ url_for('registrations.index') }}" class="filter-bar">
+        <div class="filter-inputs">
+            <div>
+                <select name="type" class="form-control" style="width: auto; padding: 0.45rem 0.75rem;">
+                    <option value="all" {% if selected_type == 'all' %}selected{% endif %}>All Types</option>
+                    <option value="volunteer" {% if selected_type == 'volunteer' %}selected{% endif %}>Volunteers</option>
+                    <option value="partner" {% if selected_type == 'partner' %}selected{% endif %}>Partners</option>
+                </select>
+            </div>
+            <div>
+                <select name="status" class="form-control" style="width: auto; padding: 0.45rem 0.75rem;">
+                    <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+                    {% for st in valid_statuses %}
+                        <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ st|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <input type="text" name="search" class="form-control" placeholder="Search name, email, org..." value="{{ search_query }}" style="width: 220px; padding: 0.45rem 0.75rem;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Search & Filter</button>
+            {% if selected_type != 'all' or selected_status != 'all' or search_query %}
+                <a href="{{ url_for('registrations.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+            {% endif %}
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Showing {{ registrations|length }} of {{ pagination.total }} records
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Registrant / Org</th>
+                    <th>Type</th>
+                    <th>Contact Info</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Registered</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reg in registrations %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">
+                            {% if reg.registration_type == 'partner' and reg.organization_name %}
+                                {{ reg.organization_name }}
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Contact: {{ reg.name }}</div>
+                            {% else %}
+                                {{ reg.name }}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if reg.registration_type == 'partner' %}
+                            <span class="badge badge-partner">Partner</span>
+                        {% else %}
+                            <span class="badge badge-volunteer">Volunteer</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="font-size: 0.85rem;">{{ reg.email }}</div>
+                        <div style="font-size: 0.775rem; color: var(--text-muted);">{{ reg.phone }}</div>
+                    </td>
+                    <td style="font-size: 0.825rem; color: var(--text-secondary);">
+                        {{ reg.city or '-' }}{% if reg.state %}, {{ reg.state }}{% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ reg.status }}">{{ reg.status|capitalize }}</span>
+                    </td>
+                    <td style="font-size: 0.8rem; color: var(--text-muted);">
+                        {{ reg.created_at.strftime('%b %d, %Y') if reg.created_at else '-' }}
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{{ url_for('registrations.detail', reg_id=reg._id) }}" class="btn btn-secondary btn-sm">Details &rarr;</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                        No registrations match the selected filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.total_pages > 1 %}
+    <div class="pagination">
+        {% if pagination.page > 1 %}
+            <a href="{{ url_for('registrations.index', page=pagination.page-1, type=selected_type, status=selected_status, search=search_query) }}" class="page-btn">&larr; Prev</a>
+        {% endif %}
+        <span style="font-size: 0.825rem; color: var(--text-muted);">Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+        {% if pagination.page < pagination.total_pages %}
+            <a href="{{ url_for('registrations.index', page=pagination.page+1, type=selected_type, status=selected_status, search=search_query) }}" class="page-btn">Next &rarr;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

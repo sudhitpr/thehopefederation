@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Statistics{% endblock %}
+{% block page_title %}Analytics & Operational Reports{% endblock %}
+
+{% block content %}
+<!-- Period Selector Toolbar -->
+<div class="card" style="padding: 1rem 1.25rem;">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{{ url_for('reports.index', period='all') }}" class="btn btn-sm {% if selected_period == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">All Time</a>
+            <a href="{{ url_for('reports.index', period='today') }}" class="btn btn-sm {% if selected_period == 'today' %}btn-primary{% else %}btn-secondary{% endif %}">Today</a>
+            <a href="{{ url_for('reports.index', period='week') }}" class="btn btn-sm {% if selected_period == 'week' %}btn-primary{% else %}btn-secondary{% endif %}">This Week</a>
+            <a href="{{ url_for('reports.index', period='month') }}" class="btn btn-sm {% if selected_period == 'month' %}btn-primary{% else %}btn-secondary{% endif %}">This Month</a>
+            <a href="{{ url_for('reports.index', period='year') }}" class="btn btn-sm {% if selected_period == 'year' %}btn-primary{% else %}btn-secondary{% endif %}">This Year</a>
+        </div>
+
+        <!-- Custom Date Range Form -->
+        <form method="GET" action="{{ url_for('reports.index') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="hidden" name="period" value="custom">
+            <input type="date" name="start_date" class="form-control" style="width: auto; padding: 0.35rem 0.6rem; font-size: 0.8rem;" value="{{ custom_start or '' }}" required>
+            <span style="color: var(--text-muted); font-size: 0.8rem;">to</span>
+            <input type="date" name="end_date" class="form-control" style="width: auto; padding: 0.35rem 0.6rem; font-size: 0.8rem;" value="{{ custom_end or '' }}" required>
+            <button type="submit" class="btn btn-secondary btn-sm">Apply Range</button>
+        </form>
+    </div>
+</div>
+
+<!-- Section 1: Registration Statistics -->
+<div style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.15rem; margin-bottom: 1rem; color: var(--text-primary);">
+        Registration Metrics
+        <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">
+            ({% if selected_period == 'all' %}All Time{% elif selected_period == 'custom' %}{{ custom_start }} to {{ custom_end }}{% else %}{{ selected_period|capitalize }}{% endif %})
+        </span>
+    </h3>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Registrations</div>
+            <div class="stat-value">{{ report.registrations.total }}</div>
+            <div class="stat-desc">Volunteers + Partners</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Volunteer Registrations</div>
+            <div class="stat-value" style="color: #38bdf8;">{{ report.registrations.volunteers }}</div>
+            <div class="stat-desc">
+                {{ ((report.registrations.volunteers / report.registrations.total * 100)|round(1)) if report.registrations.total > 0 else 0 }}% of total
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Partner Registrations</div>
+            <div class="stat-value" style="color: #c084fc;">{{ report.registrations.partners }}</div>
+            <div class="stat-desc">
+                {{ ((report.registrations.partners / report.registrations.total * 100)|round(1)) if report.registrations.total > 0 else 0 }}% of total
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Approved & Active</div>
+            <div class="stat-value" style="color: #34d399;">{{ report.registrations.approved + report.registrations.active }}</div>
+            <div class="stat-desc">{{ report.registrations.new }} pending review</div>
+        </div>
+    </div>
+
+    <!-- Registration Status Breakdown Card -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Registration Status Breakdown</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; text-align: center;">
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">New</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #38bdf8; margin-top: 0.25rem;">{{ report.registrations.new }}</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Contacted</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #fbbf24; margin-top: 0.25rem;">{{ report.registrations.contacted }}</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Approved</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #34d399; margin-top: 0.25rem;">{{ report.registrations.approved }}</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Active</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #10b981; margin-top: 0.25rem;">{{ report.registrations.active }}</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Rejected</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #fb7185; margin-top: 0.25rem;">{{ report.registrations.rejected }}</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Inactive</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #94a3b8; margin-top: 0.25rem;">{{ report.registrations.inactive }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 2: Prayer Request Statistics -->
+<div>
+    <h3 style="font-size: 1.15rem; margin-bottom: 1rem; color: var(--text-primary);">
+        Prayer Request Analytics
+    </h3>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Requests</div>
+            <div class="stat-value" style="color: #a78bfa;">{{ report.prayer_requests.total }}</div>
+            <div class="stat-desc">Submitted in timeframe</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active in Prayer</div>
+            <div class="stat-value" style="color: #38bdf8;">{{ report.prayer_requests.praying }}</div>
+            <div class="stat-desc">{{ report.prayer_requests.new }} new awaiting review</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Completed & Praised</div>
+            <div class="stat-value" style="color: #34d399;">{{ report.prayer_requests.completed }}</div>
+            <div class="stat-desc">Answered or concluded prayers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Archived</div>
+            <div class="stat-value" style="color: #94a3b8;">{{ report.prayer_requests.archived }}</div>
+            <div class="stat-desc">Historical records</div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown Table -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Prayer Requests by Category</h4>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Volume</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in report.prayer_categories %}
+                    <tr>
+                        <td style="font-weight: 600; color: #c084fc;">{{ cat.category }}</td>
+                        <td>{{ cat.count }}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="flex-grow: 1; max-width: 200px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: {{ (cat.count / report.prayer_requests.total * 100)|round(0) if report.prayer_requests.total > 0 else 0 }}%; height: 100%; background: #a78bfa;"></div>
+                                </div>
+                                <span style="font-size: 0.775rem; color: var(--text-muted);">
+                                    {{ ((cat.count / report.prayer_requests.total * 100)|round(1)) if report.prayer_requests.total > 0 else 0 }}%
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                            No prayer requests recorded in this period.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

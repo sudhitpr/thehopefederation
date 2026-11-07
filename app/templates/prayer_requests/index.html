@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Prayer Requests{% endblock %}
+{% block page_title %}Confidential Prayer Requests{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Prayer Requests Queue</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Confidential community prayer needs and pastoral care</span>
+        </div>
+        <a href="{{ url_for('public.prayer_request') }}" target="_blank" class="btn btn-secondary btn-sm">+ Public Submission Form &rarr;</a>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <form method="GET" action="{{ url_for('prayer_requests.index') }}" class="filter-bar">
+        <div class="filter-inputs">
+            <div>
+                <select name="status" class="form-control" style="width: auto; padding: 0.45rem 0.75rem;">
+                    <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+                    {% for st in valid_statuses %}
+                        <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ st|replace('_', ' ')|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <select name="category" class="form-control" style="width: auto; padding: 0.45rem 0.75rem;">
+                    <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <input type="text" name="search" class="form-control" placeholder="Search requester or category..." value="{{ search_query }}" style="width: 220px; padding: 0.45rem 0.75rem;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            {% if selected_status != 'all' or selected_category != 'all' or search_query %}
+                <a href="{{ url_for('prayer_requests.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+            {% endif %}
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Showing {{ requests|length }} of {{ pagination.total }} requests
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Requester</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Contact Preference</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pr in requests %}
+                <tr>
+                    <td>
+                        <span style="font-weight: 600; color: #a78bfa;">{{ pr.category }}</span>
+                    </td>
+                    <td>
+                        {% if pr.is_anonymous %}
+                            <span class="badge" style="background: rgba(100, 116, 139, 0.2); color: #cbd5e1;">Anonymous</span>
+                        {% else %}
+                            <div style="font-weight: 500;">{{ pr.name }}</div>
+                            {% if pr.email %}
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ pr.email }}</div>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ pr.status }}">{{ pr.status|replace('_', ' ')|capitalize }}</span>
+                    </td>
+                    <td style="font-size: 0.825rem; color: var(--text-muted);">
+                        {{ pr.created_at.strftime('%b %d, %Y') if pr.created_at else '-' }}
+                    </td>
+                    <td style="font-size: 0.825rem; color: var(--text-secondary);">
+                        {{ pr.preferred_contact or 'None' }}
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{{ url_for('prayer_requests.detail', req_id=pr._id) }}" class="btn btn-secondary btn-sm">View Request &rarr;</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                        No prayer requests match the selected filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.total_pages > 1 %}
+    <div class="pagination">
+        {% if pagination.page > 1 %}
+            <a href="{{ url_for('prayer_requests.index', page=pagination.page-1, status=selected_status, category=selected_category, search=search_query) }}" class="page-btn">&larr; Prev</a>
+        {% endif %}
+        <span style="font-size: 0.825rem; color: var(--text-muted);">Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+        {% if pagination.page < pagination.total_pages %}
+            <a href="{{ url_for('prayer_requests.index', page=pagination.page+1, status=selected_status, category=selected_category, search=search_query) }}" class="page-btn">Next &rarr;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
