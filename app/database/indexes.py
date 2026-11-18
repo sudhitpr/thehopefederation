@@ -56,6 +56,12 @@ def create_indexes(db):
         prayer_col.create_index([("status", ASCENDING)], name="idx_prayer_status")
         prayer_col.create_index([("category", ASCENDING)], name="idx_prayer_category")
         prayer_col.create_index([("created_at", DESCENDING)], name="idx_prayer_created_at")
+        prayer_col.create_index([("scheduled_at", ASCENDING)], sparse=True, name="idx_prayer_scheduled_at")
+        prayer_col.create_index(
+            [("scheduled_at", ASCENDING), ("reminder_sent", ASCENDING)],
+            sparse=True,
+            name="idx_prayer_scheduled_reminder",
+        )
         # Compound indexes for category & status listing
         prayer_col.create_index(
             [("status", ASCENDING), ("created_at", DESCENDING)],
@@ -70,7 +76,8 @@ def create_indexes(db):
             name="idx_prayer_status_cat_date"
         )
         results["prayer_requests"] = [
-            "status", "category", "created_at", "status_date", "category_date", "status_cat_date"
+            "status", "category", "created_at", "scheduled_at", "scheduled_reminder",
+            "status_date", "category_date", "status_cat_date"
         ]
 
         # 4. Audit Logs collection

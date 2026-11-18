@@ -53,6 +53,7 @@
                     <th>Category</th>
                     <th>Requester</th>
                     <th>Status</th>
+                    <th>Scheduled Time</th>
                     <th>Submitted</th>
                     <th>Contact Preference</th>
                     <th style="text-align: right;">Action</th>
@@ -77,6 +78,15 @@
                     <td>
                         <span class="badge badge-{{ pr.status }}">{{ pr.status|replace('_', ' ')|capitalize }}</span>
                     </td>
+                    <td>
+                        {% if pr.scheduled_at %}
+                            <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3); font-size: 0.75rem;">
+                                🗓️ {{ pr.scheduled_at.strftime('%b %d, %Y %I:%M %p') }}
+                            </span>
+                        {% else %}
+                            <span style="font-size: 0.775rem; color: var(--text-muted);">Not scheduled</span>
+                        {% endif %}
+                    </td>
                     <td style="font-size: 0.825rem; color: var(--text-muted);">
                         {{ pr.created_at.strftime('%b %d, %Y') if pr.created_at else '-' }}
                     </td>
@@ -89,7 +99,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
                         No prayer requests match the selected filters.
                     </td>
                 </tr>

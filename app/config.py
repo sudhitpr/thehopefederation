@@ -12,6 +12,23 @@ else:
     load_dotenv()
 
 
+def _env_str(name, default=""):
+    """Read an environment variable as a trimmed string with surrounding quotes removed."""
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    val = val.strip().strip('"').strip("'").strip()
+    return val if val else default
+
+
+def _env_bool(name, default=False):
+    """Read an environment variable as a boolean flag."""
+    val = os.environ.get(name)
+    if val is None or not val.strip():
+        return default
+    return val.strip().strip('"').strip("'").lower() in ("true", "1", "yes", "on")
+
+
 def get_mongo_uri():
     """
     Resolve the MongoDB connection URI from environment variables.
@@ -129,6 +146,26 @@ class Config:
     # Security settings
     WTF_CSRF_TIME_LIMIT = 3600
 
+    # Email / SMTP notifications (credentials come ONLY from environment variables)
+    MAIL_ENABLED = _env_bool("MAIL_ENABLED", False)
+    MAIL_SERVER = _env_str("MAIL_SERVER")
+    MAIL_PORT = int(_env_str("MAIL_PORT", "465") or 465)
+    MAIL_USE_SSL = _env_bool("MAIL_USE_SSL", True)
+    MAIL_USE_TLS = _env_bool("MAIL_USE_TLS", False)
+    MAIL_USERNAME = _env_str("MAIL_USERNAME")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
+    MAIL_DEFAULT_SENDER = _env_str("MAIL_DEFAULT_SENDER") or _env_str("MAIL_USERNAME")
+    MAIL_SENDER_NAME = _env_str("MAIL_SENDER_NAME", "The Hope Federation")
+    MAIL_REPLY_TO = _env_str("MAIL_REPLY_TO")
+    MAIL_TIMEOUT = int(_env_str("MAIL_TIMEOUT", "10") or 10)
+    # Optional (development only): redirect every outgoing email to this address
+    MAIL_OVERRIDE_RECIPIENT = _env_str("MAIL_OVERRIDE_RECIPIENT")
+
+    # Timezone used for prayer schedule comparisons and display (admins enter times in IST)
+    SCHEDULE_TIMEZONE = _env_str("SCHEDULE_TIMEZONE", "Asia/Kolkata")
+    SCHEDULE_TIMEZONE_LABEL = _env_str("SCHEDULE_TIMEZONE_LABEL", "IST (Indian Standard Time)")
+    PRAYER_REMINDER_WINDOW_MINUTES = int(_env_str("PRAYER_REMINDER_WINDOW_MINUTES", "60") or 60)
+
 
 class DevelopmentConfig(Config):
     """Development environment configuration."""
@@ -144,6 +181,9 @@ class TestingConfig(Config):
     MONGO_DB_NAME = os.environ.get("TEST_MONGO_DB_NAME", "hope_admin_test_db")
     SECRET_KEY = "test-secret-key-never-use-in-production"
     WTF_CSRF_ENABLED = False
+    # Never send real emails from the test suite
+    MAIL_ENABLED = False
+    MAIL_OVERRIDE_RECIPIENT = ""
 
 
 class ProductionConfig(Config):

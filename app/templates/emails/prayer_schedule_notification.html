@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif; color:#1f2933;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f6f8; padding:24px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+                    <tr>
+                        <td style="background-color:#0f4c5c; color:#ffffff; padding:20px 28px; font-size:20px; font-weight:bold;">
+                            {{ org_name }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:28px; font-size:15px; line-height:1.6;">
+                            <p style="margin:0 0 16px;">Dear {{ name }},</p>
+
+                            {% if change_type == "scheduled" %}
+                            <p style="margin:0 0 16px;">Thank you for sharing your prayer request with {{ org_name }}. We have received it, and our prayer team has scheduled a time to pray for you.</p>
+                            {% elif change_type == "rescheduled" %}
+                            <p style="margin:0 0 16px;">The prayer session for your request with {{ org_name }} has been <strong>rescheduled</strong>. Please note the updated date and time below.</p>
+                            {% else %}
+                            <p style="margin:0 0 16px;">We would like to let you know that the prayer session previously scheduled for your request with {{ org_name }} has been <strong>cancelled</strong>.</p>
+                            {% endif %}
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#eef6f8; border-left:4px solid #0f4c5c; border-radius:4px; margin:0 0 20px;">
+                                <tr>
+                                    <td style="padding:16px 20px; font-size:15px;">
+                                        {% if change_type in ("scheduled", "rescheduled") %}
+                                        <div style="margin-bottom:6px;"><strong>{% if change_type == "rescheduled" %}New date{% else %}Date{% endif %}:</strong> {{ date_str }}</div>
+                                        <div style="margin-bottom:6px;"><strong>{% if change_type == "rescheduled" %}New time{% else %}Time{% endif %}:</strong> {{ time_str }} {{ timezone_label }}</div>
+                                        {% if change_type == "rescheduled" and previous_date_str %}
+                                        <div style="margin-bottom:6px; color:#616e7c;"><strong>Previously:</strong> {{ previous_date_str }} at {{ previous_time_str }} {{ timezone_label }}</div>
+                                        {% endif %}
+                                        {% elif previous_date_str %}
+                                        <div style="margin-bottom:6px;"><strong>Cancelled session:</strong> {{ previous_date_str }} at {{ previous_time_str }} {{ timezone_label }}</div>
+                                        {% endif %}
+                                        <div style="margin-bottom:6px;"><strong>Reference:</strong> {{ reference }}</div>
+                                        {% if category %}
+                                        <div><strong>Category:</strong> {{ category }}</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            {% if change_type == "cleared" %}
+                            <p style="margin:0 0 16px;">Your prayer request remains with us and our team continues to keep you in prayer. We will reach out again if a new time is arranged.</p>
+                            {% endif %}
+
+                            <p style="margin:0 0 16px;">If you have any questions, simply reply to this email{% if contact_email %} or write to us at <a href="mailto:{{ contact_email }}" style="color:#0f4c5c;">{{ contact_email }}</a>{% endif %}.</p>
+
+                            <p style="margin:24px 0 0;">With prayers and blessings,<br><strong>{{ org_name }}</strong></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:16px 28px; background-color:#f9fafb; color:#7b8794; font-size:12px; line-height:1.5;">
+                            This is an automated notification regarding a prayer request you submitted.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

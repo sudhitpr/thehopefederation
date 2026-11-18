@@ -1,0 +1,19 @@
+{# Plain-text upcoming prayer session reminder. Variables: name, reference, category, date_str, time_str, timezone_label, org_name, contact_email -#}
+Dear {{ name }},
+
+This is a friendly reminder that your scheduled prayer session with {{ org_name }} is coming up soon.
+
+Scheduled date : {{ date_str }}
+Scheduled time : {{ time_str }} {{ timezone_label }}
+Reference      : {{ reference }}
+{% if category %}Category       : {{ category }}
+{% endif %}
+Our prayer team is preparing to lift up your request in prayer at the scheduled time.
+
+If you have any questions, simply reply to this email{% if contact_email %} or write to us at {{ contact_email }}{% endif %}.
+
+With prayers and blessings,
+{{ org_name }}
+
+--
+This is an automated reminder regarding a prayer request you submitted.

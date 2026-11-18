@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif; color:#1f2933;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f6f8; padding:24px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+                    <tr>
+                        <td style="background-color:#0f4c5c; color:#ffffff; padding:20px 28px; font-size:20px; font-weight:bold;">
+                            {{ org_name }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:28px; font-size:15px; line-height:1.6;">
+                            <p style="margin:0 0 16px;">Dear {{ name }},</p>
+
+                            <p style="margin:0 0 16px;">This is a friendly reminder that your scheduled prayer session with {{ org_name }} is coming up soon.</p>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#eef6f8; border-left:4px solid #0f4c5c; border-radius:4px; margin:0 0 20px;">
+                                <tr>
+                                    <td style="padding:16px 20px; font-size:15px;">
+                                        <div style="margin-bottom:6px;"><strong>Date:</strong> {{ date_str }}</div>
+                                        <div style="margin-bottom:6px;"><strong>Time:</strong> {{ time_str }} {{ timezone_label }}</div>
+                                        <div style="margin-bottom:6px;"><strong>Reference:</strong> {{ reference }}</div>
+                                        {% if category %}
+                                        <div><strong>Category:</strong> {{ category }}</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin:0 0 16px;">Our prayer team is preparing to lift up your request in prayer at the scheduled time.</p>
+
+                            <p style="margin:0 0 16px;">If you have any questions, simply reply to this email{% if contact_email %} or write to us at <a href="mailto:{{ contact_email }}" style="color:#0f4c5c;">{{ contact_email }}</a>{% endif %}.</p>
+
+                            <p style="margin:24px 0 0;">With prayers and blessings,<br><strong>{{ org_name }}</strong></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:16px 28px; background-color:#f9fafb; color:#7b8794; font-size:12px; line-height:1.5;">
+                            This is an automated reminder regarding a prayer request you submitted.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

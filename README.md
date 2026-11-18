@@ -194,6 +194,55 @@ The application will be running at `http://127.0.0.1:5000`:
 
 ---
 
+## Email Notifications (Prayer Scheduling)
+
+When an admin schedules, reschedules or clears a prayer session, the requester receives an email
+(only if they provided an email address and are not anonymous). The prayer text itself is never emailed.
+The schedule is always saved first; if the email fails, the admin sees a warning and the failure is
+logged and audited (`PRAYER_SCHEDULE_EMAIL_FAILED`).
+
+Configure via environment variables (see `.env.example`). Never commit real credentials:
+
+| Variable | Example |
+|---|---|
+| `MAIL_ENABLED` | `true` |
+| `MAIL_SERVER` | `mail.thehopefederation.com` |
+| `MAIL_PORT` / `MAIL_USE_SSL` / `MAIL_USE_TLS` | `465` / `true` / `false` (or `587` / `false` / `true`) |
+| `MAIL_USERNAME` / `MAIL_DEFAULT_SENDER` | `enquiry@thehopefederation.com` |
+| `MAIL_PASSWORD` | mailbox password, wrapped in single quotes |
+| `MAIL_OVERRIDE_RECIPIENT` | development only: redirect all emails to this address |
+
+Verify the configuration (local or on the server):
+
+```bash
+flask --app run.py send-test-email --to you@example.com
+```
+
+On cPanel, set the same variables under **Setup Python App → Environment variables** (or in the
+server's `.env` with `chmod 600`), then restart the application.
+
+### Hourly Prayer Request Reminder Cron Job
+
+`scripts/send_prayer_reminders.py` checks MongoDB for scheduled prayer requests taking place within the
+next 60 minutes (in `SCHEDULE_TIMEZONE`, default `Asia/Kolkata`), sends reminder emails via the same
+SMTP configuration, and marks each document (`reminder_sent`, `reminder_sent_for`, `reminder_sent_at`)
+so duplicate reminders are never sent.
+
+Test locally (safe dry run, then live run):
+
+```bash
+python scripts/send_prayer_reminders.py --dry-run
+python scripts/send_prayer_reminders.py
+```
+
+Configure on the live cPanel server under **cPanel → Cron Jobs** (schedule: `0 * * * *`):
+
+```bash
+0 * * * * /home/<cpanel-user>/virtualenv/<app-domain>/3.11/bin/python /home/<cpanel-user>/<app-dir>/scripts/send_prayer_reminders.py >> /home/<cpanel-user>/logs/prayer_reminders.log 2>&1
+```
+
+---
+
 ## Default Seeded Admin Credentials
 
 For development and evaluation:

@@ -21,6 +21,15 @@
                     <span class="badge badge-{{ req.status }}" style="margin-left: 0.5rem;">
                         {{ req.status|replace('_', ' ')|capitalize }}
                     </span>
+                    {% if req.scheduled_at %}
+                        <span class="badge" style="background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3); font-size: 0.85rem; margin-left: 0.5rem;">
+                            🗓️ Scheduled: {{ req.scheduled_at.strftime('%b %d, %Y at %I:%M %p') }}
+                        </span>
+                    {% else %}
+                        <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.25); font-size: 0.85rem; margin-left: 0.5rem;">
+                            Unscheduled
+                        </span>
+                    {% endif %}
                     <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
                         Submitted on {{ req.created_at.strftime('%B %d, %Y at %H:%M') if req.created_at else '-' }}
                     </div>
@@ -110,6 +119,138 @@
 
     <!-- Sidebar Actions Column -->
     <div>
+        <!-- Schedule Prayer Session Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🗓️ Prayer Schedule</h3>
+            </div>
+
+            {% if req.scheduled_at %}
+                <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1rem;">
+                    <div style="font-size: 0.725rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-cyan); font-weight: 600;">
+                        Assigned Schedule
+                    </div>
+                    <div style="font-size: 0.95rem; font-weight: 600; color: #fff; margin-top: 0.25rem;">
+                        {{ req.scheduled_at.strftime('%A, %b %d, %Y') }}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #38bdf8; margin-top: 0.15rem;">
+                        ⏰ {{ req.scheduled_at.strftime('%I:%M %p') }}
+                    </div>
+                </div>
+            {% else %}
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.825rem; color: var(--text-muted);">
+                    No prayer session currently scheduled.
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('prayer_requests.schedule', req_id=req._id) }}" id="prayer-schedule-form">
+                <!-- Visual Interactive Calendar & Time Picker -->
+                <div class="cal-widget-container">
+                    <!-- Calendar Header: Month/Year navigation -->
+                    <div class="cal-header">
+                        <button type="button" class="cal-nav-btn" id="cal-prev-month" title="Previous Month">&larr;</button>
+                        <span class="cal-header-title" id="cal-month-year">November 2026</span>
+                        <button type="button" class="cal-nav-btn" id="cal-next-month" title="Next Month">&rarr;</button>
+                    </div>
+
+                    <!-- Weekday Labels -->
+                    <div class="cal-weekdays">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+
+                    <!-- Days Grid -->
+                    <div class="cal-grid" id="cal-days-grid">
+                        <!-- Filled dynamically by JavaScript -->
+                    </div>
+
+                    <!-- Time Selection Section -->
+                    <div class="time-picker-box">
+                        <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.35rem; color: var(--accent-cyan);">
+                            ⏰ Choose Prayer Time
+                        </label>
+                        <div class="time-picker-row">
+                            <select id="cal-hour" class="time-select-input" title="Hour">
+                                {% for h in range(1, 13) %}
+                                    <option value="{{ h }}">{{ "%02d" % h }}</option>
+                                {% endfor %}
+                            </select>
+                            <span style="font-weight: 700; color: var(--text-muted); font-size: 1rem;">:</span>
+                            <select id="cal-minute" class="time-select-input" title="Minute">
+                                <option value="00">00</option>
+                                <option value="05">05</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                                <option value="25">25</option>
+                                <option value="30">30</option>
+                                <option value="35">35</option>
+                                <option value="40">40</option>
+                                <option value="45">45</option>
+                                <option value="50">50</option>
+                                <option value="55">55</option>
+                            </select>
+                            <div class="ampm-switch">
+                                <button type="button" class="ampm-option active" id="ampm-am">AM</button>
+                                <button type="button" class="ampm-option" id="ampm-pm">PM</button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Preset Time Buttons -->
+                        <div class="time-presets">
+                            <button type="button" class="time-preset-chip" data-time="09:00 AM">🌅 9:00 AM</button>
+                            <button type="button" class="time-preset-chip" data-time="12:00 PM">☀️ 12:00 PM</button>
+                            <button type="button" class="time-preset-chip" data-time="03:00 PM">🌤️ 3:00 PM</button>
+                            <button type="button" class="time-preset-chip" data-time="06:30 PM">🌆 6:30 PM</button>
+                            <button type="button" class="time-preset-chip" data-time="08:00 PM">🌙 8:00 PM</button>
+                        </div>
+                    </div>
+
+                    <!-- Alternate Native Picker Option -->
+                    <div style="margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed var(--border-color); font-size: 0.75rem; color: var(--text-muted);">
+                        <details style="cursor: pointer;">
+                            <summary style="outline: none; color: var(--accent-cyan);">Or choose with system calendar...</summary>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                                <div>
+                                    <label class="form-label" style="font-size: 0.7rem;">Date</label>
+                                    <input type="date" id="native_date" class="form-control" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;" onclick="this.showPicker && this.showPicker()">
+                                </div>
+                                <div>
+                                    <label class="form-label" style="font-size: 0.7rem;">Time</label>
+                                    <input type="time" id="native_time" class="form-control" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;" onclick="this.showPicker && this.showPicker()">
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Selected Banner -->
+                <div class="cal-summary-banner">
+                    <span style="font-size: 1.15rem;">🗓️</span>
+                    <div>
+                        <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.04em;">Selected Schedule</div>
+                        <strong id="preview-text">Please select date & time</strong>
+                    </div>
+                </div>
+
+                <!-- Hidden Input bound to form submission -->
+                <input type="hidden" name="scheduled_at" id="scheduled_at_input"
+                       value="{{ req.scheduled_at.strftime('%Y-%m-%dT%H:%M') if req.scheduled_at else '' }}">
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 0.5rem;">
+                    {% if req.scheduled_at %}✓ Update Assigned Schedule{% else %}✓ Confirm & Schedule Prayer{% endif %}
+                </button>
+            </form>
+
+            {% if req.scheduled_at %}
+            <form method="POST" action="{{ url_for('prayer_requests.schedule', req_id=req._id) }}" onsubmit="return confirm('Are you sure you want to clear this scheduled prayer session?');">
+                <input type="hidden" name="action" value="clear">
+                <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center; color: var(--text-muted); margin-top: 0.25rem;">
+                    ✕ Clear Schedule
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
         <!-- Update Workflow Status Card -->
         <div class="card">
             <div class="card-header">
@@ -167,4 +308,300 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    const monthNamesShort = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    const dayNamesFull = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    const hiddenInput = document.getElementById("scheduled_at_input");
+    const previewText = document.getElementById("preview-text");
+    const monthYearTitle = document.getElementById("cal-month-year");
+    const daysGrid = document.getElementById("cal-days-grid");
+    const prevBtn = document.getElementById("cal-prev-month");
+    const nextBtn = document.getElementById("cal-next-month");
+
+    const hourSelect = document.getElementById("cal-hour");
+    const minuteSelect = document.getElementById("cal-minute");
+    const btnAm = document.getElementById("ampm-am");
+    const btnPm = document.getElementById("ampm-pm");
+    const presetPills = document.querySelectorAll(".time-preset-chip");
+
+    const initialIso = hiddenInput ? (hiddenInput.value || "").trim() : "";
+    let initialDate = null;
+    if (initialIso) {
+        // Handle ISO format like 2026-11-20T14:30 or 2026-11-20 14:30
+        const normalizedIso = initialIso.replace(" ", "T");
+        const parts = normalizedIso.split("T");
+        if (parts.length >= 2) {
+            const dateParts = parts[0].split("-");
+            const timeParts = parts[1].split(":");
+            if (dateParts.length === 3 && timeParts.length >= 2) {
+                const y = parseInt(dateParts[0], 10);
+                const m = parseInt(dateParts[1], 10) - 1;
+                const d = parseInt(dateParts[2], 10);
+                const hr = parseInt(timeParts[0], 10);
+                const mn = parseInt(timeParts[1], 10);
+                initialDate = new Date(y, m, d, hr, mn);
+            }
+        }
+    }
+
+    const today = new Date();
+    let currentViewYear = initialDate ? initialDate.getFullYear() : today.getFullYear();
+    let currentViewMonth = initialDate ? initialDate.getMonth() : today.getMonth();
+
+    let selectedYear = initialDate ? initialDate.getFullYear() : today.getFullYear();
+    let selectedMonth = initialDate ? initialDate.getMonth() : today.getMonth();
+    let selectedDay = initialDate ? initialDate.getDate() : today.getDate();
+
+    let selectedHour12 = 9;
+    let selectedMinute = "00";
+    let selectedAmPm = "AM";
+
+    if (initialDate) {
+        let h24 = initialDate.getHours();
+        selectedAmPm = h24 >= 12 ? "PM" : "AM";
+        selectedHour12 = h24 % 12;
+        if (selectedHour12 === 0) selectedHour12 = 12;
+        selectedMinute = String(initialDate.getMinutes()).padStart(2, "0");
+    }
+
+    if (hourSelect) hourSelect.value = String(selectedHour12);
+    if (minuteSelect) {
+        if (![...minuteSelect.options].some(o => o.value === selectedMinute)) {
+            const opt = new Option(selectedMinute, selectedMinute, true, true);
+            minuteSelect.add(opt);
+        }
+        minuteSelect.value = selectedMinute;
+    }
+    updateAmPmUI();
+
+    function updateAmPmUI() {
+        if (!btnAm || !btnPm) return;
+        if (selectedAmPm === "AM") {
+            btnAm.classList.add("active");
+            btnPm.classList.remove("active");
+        } else {
+            btnPm.classList.add("active");
+            btnAm.classList.remove("active");
+        }
+    }
+
+    function renderCalendar() {
+        if (!daysGrid || !monthYearTitle) return;
+
+        monthYearTitle.textContent = `${monthNames[currentViewMonth]} ${currentViewYear}`;
+        daysGrid.innerHTML = "";
+
+        const firstDayIdx = new Date(currentViewYear, currentViewMonth, 1).getDay(); // 0 is Sunday
+        const totalDaysInMonth = new Date(currentViewYear, currentViewMonth + 1, 0).getDate();
+        const prevMonthTotalDays = new Date(currentViewYear, currentViewMonth, 0).getDate();
+
+        // Previous month filler days
+        for (let i = firstDayIdx - 1; i >= 0; i--) {
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "cal-day-cell empty";
+            cell.textContent = String(prevMonthTotalDays - i);
+            cell.disabled = true;
+            daysGrid.appendChild(cell);
+        }
+
+        // Days of current month
+        for (let d = 1; d <= totalDaysInMonth; d++) {
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "cal-day-cell";
+            cell.textContent = String(d);
+
+            const isToday = (
+                today.getFullYear() === currentViewYear &&
+                today.getMonth() === currentViewMonth &&
+                today.getDate() === d
+            );
+            if (isToday) cell.classList.add("today");
+
+            const isSelected = (
+                selectedYear === currentViewYear &&
+                selectedMonth === currentViewMonth &&
+                selectedDay === d
+            );
+            if (isSelected) cell.classList.add("selected");
+
+            cell.addEventListener("click", function () {
+                selectedYear = currentViewYear;
+                selectedMonth = currentViewMonth;
+                selectedDay = d;
+                renderCalendar();
+                syncOutput();
+            });
+
+            daysGrid.appendChild(cell);
+        }
+
+        // Filler days to complete row of 7
+        const totalCells = firstDayIdx + totalDaysInMonth;
+        const remaining = (7 - (totalCells % 7)) % 7;
+        for (let j = 1; j <= remaining; j++) {
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "cal-day-cell empty";
+            cell.textContent = String(j);
+            cell.disabled = true;
+            daysGrid.appendChild(cell);
+        }
+    }
+
+    function syncOutput() {
+        let h24 = parseInt(selectedHour12, 10);
+        if (selectedAmPm === "PM" && h24 < 12) h24 += 12;
+        if (selectedAmPm === "AM" && h24 === 12) h24 = 0;
+
+        const hStr = String(h24).padStart(2, "0");
+        const mStr = String(selectedMinute).padStart(2, "0");
+        const yStr = String(selectedYear);
+        const moStr = String(selectedMonth + 1).padStart(2, "0");
+        const dStr = String(selectedDay).padStart(2, "0");
+
+        const isoValue = `${yStr}-${moStr}-${dStr}T${hStr}:${mStr}`;
+        if (hiddenInput) hiddenInput.value = isoValue;
+
+        const selectedDateObj = new Date(selectedYear, selectedMonth, selectedDay);
+        const dayName = dayNamesFull[selectedDateObj.getDay()];
+        const displayStr = `${dayName}, ${monthNamesShort[selectedMonth]} ${selectedDay}, ${selectedYear} at ${String(selectedHour12).padStart(2, "0")}:${mStr} ${selectedAmPm}`;
+        if (previewText) previewText.textContent = displayStr;
+
+        const nativeDate = document.getElementById("native_date");
+        const nativeTime = document.getElementById("native_time");
+        if (nativeDate) nativeDate.value = `${yStr}-${moStr}-${dStr}`;
+        if (nativeTime) nativeTime.value = `${hStr}:${mStr}`;
+
+        presetPills.forEach(pill => {
+            const pillTime = pill.getAttribute("data-time");
+            const curFormatted = `${String(selectedHour12).padStart(2, "0")}:${mStr} ${selectedAmPm}`;
+            const curAlt = `${selectedHour12}:${mStr} ${selectedAmPm}`;
+            if (pillTime === curFormatted || pillTime === curAlt) {
+                pill.classList.add("active");
+            } else {
+                pill.classList.remove("active");
+            }
+        });
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener("click", function () {
+            currentViewMonth--;
+            if (currentViewMonth < 0) {
+                currentViewMonth = 11;
+                currentViewYear--;
+            }
+            renderCalendar();
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener("click", function () {
+            currentViewMonth++;
+            if (currentViewMonth > 11) {
+                currentViewMonth = 0;
+                currentViewYear++;
+            }
+            renderCalendar();
+        });
+    }
+
+    if (hourSelect) {
+        hourSelect.addEventListener("change", function () {
+            selectedHour12 = parseInt(this.value, 10);
+            syncOutput();
+        });
+    }
+
+    if (minuteSelect) {
+        minuteSelect.addEventListener("change", function () {
+            selectedMinute = this.value;
+            syncOutput();
+        });
+    }
+
+    if (btnAm) {
+        btnAm.addEventListener("click", function () {
+            selectedAmPm = "AM";
+            updateAmPmUI();
+            syncOutput();
+        });
+    }
+
+    if (btnPm) {
+        btnPm.addEventListener("click", function () {
+            selectedAmPm = "PM";
+            updateAmPmUI();
+            syncOutput();
+        });
+    }
+
+    presetPills.forEach(pill => {
+        pill.addEventListener("click", function () {
+            const timeStr = this.getAttribute("data-time");
+            const parts = timeStr.split(" ");
+            const hm = parts[0].split(":");
+            selectedHour12 = parseInt(hm[0], 10);
+            selectedMinute = hm[1];
+            selectedAmPm = parts[1];
+
+            if (hourSelect) hourSelect.value = String(selectedHour12);
+            if (minuteSelect) minuteSelect.value = selectedMinute;
+            updateAmPmUI();
+            syncOutput();
+        });
+    });
+
+    const nativeDate = document.getElementById("native_date");
+    const nativeTime = document.getElementById("native_time");
+    if (nativeDate) {
+        nativeDate.addEventListener("change", function () {
+            if (this.value) {
+                const parts = this.value.split("-");
+                selectedYear = parseInt(parts[0], 10);
+                selectedMonth = parseInt(parts[1], 10) - 1;
+                selectedDay = parseInt(parts[2], 10);
+                currentViewYear = selectedYear;
+                currentViewMonth = selectedMonth;
+                renderCalendar();
+                syncOutput();
+            }
+        });
+    }
+    if (nativeTime) {
+        nativeTime.addEventListener("change", function () {
+            if (this.value) {
+                const parts = this.value.split(":");
+                let h24 = parseInt(parts[0], 10);
+                selectedMinute = parts[1];
+                selectedAmPm = h24 >= 12 ? "PM" : "AM";
+                selectedHour12 = h24 % 12;
+                if (selectedHour12 === 0) selectedHour12 = 12;
+
+                if (hourSelect) hourSelect.value = String(selectedHour12);
+                if (minuteSelect) minuteSelect.value = selectedMinute;
+                updateAmPmUI();
+                syncOutput();
+            }
+        });
+    }
+
+    renderCalendar();
+    syncOutput();
+});
+</script>
 {% endblock %}

@@ -53,3 +53,48 @@ def register_commands(app):
                 click.echo(f"Error: {err}", err=True)
             else:
                 click.echo(f"Super Admin user '{user.email}' created successfully.")
+
+    @app.cli.command("send-test-email")
+    @click.option("--to", "recipient", required=True, help="Address that should receive the test email")
+    def send_test_email_command(recipient):
+        """Verify SMTP settings by sending a test email (credentials are never printed)."""
+        from app.services.email_service import EmailService
+        with app.app_context():
+            cfg = app.config
+            mode = "SSL" if cfg.get("MAIL_USE_SSL") else ("STARTTLS" if cfg.get("MAIL_USE_TLS") else "PLAIN")
+            click.echo(
+                f"Mail settings: enabled={bool(cfg.get('MAIL_ENABLED'))}, "
+                f"server={cfg.get('MAIL_SERVER') or '(not set)'}:{cfg.get('MAIL_PORT')} ({mode}), "
+                f"sender={cfg.get('MAIL_DEFAULT_SENDER') or '(not set)'}, "
+                f"password={'set' if cfg.get('MAIL_PASSWORD') else 'NOT SET'}"
+            )
+            if not cfg.get("MAIL_ENABLED"):
+                click.echo("MAIL_ENABLED is off; set MAIL_ENABLED=true to send.", err=True)
+                return
+
+            service = EmailService(cfg)
+            result = service.send(
+                recipient,
+                f"Test email - {cfg.get('MAIL_SENDER_NAME') or 'Hope Admin'}",
+                "This is a test email confirming that SMTP is configured correctly for the Hope admin portal.",
+            )
+            if result.sent:
+                click.echo("Success: test email sent.")
+            else:
+                click.echo(f"Failed: {result.status} ({result.error}). See application log for details.", err=True)
+
+    @app.cli.command("send-prayer-reminders")
+    @click.option("--dry-run", is_flag=True, default=False, help="Check upcoming requests without sending emails.")
+    @click.option("--window-minutes", type=int, default=None, help="Lookahead window in minutes (default: 60).")
+    def send_prayer_reminders_command(dry_run, window_minutes):
+        """Run the upcoming prayer request email reminder check."""
+        from app.services.prayer_reminder_service import PrayerReminderService
+        with app.app_context():
+            summary = PrayerReminderService().run(window_minutes=window_minutes, dry_run=dry_run)
+            click.echo(
+                f"Status: {summary['status']} | Window: {summary['window_start']} .. {summary['window_end']} "
+                f"({summary['timezone']}) | Found: {summary['found']} | Pending: {summary['pending']} | "
+                f"Sent: {summary['sent']} | Failed: {summary['failed']} | Skipped: {summary['skipped']}"
+            )
+            if summary["status"] == "db_error":
+                raise SystemExit(1)

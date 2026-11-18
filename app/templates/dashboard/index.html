@@ -115,7 +115,8 @@
                     <tr>
                         <th>Requester / Category</th>
                         <th>Status</th>
-                        <th>Date</th>
+                        <th>Scheduled For</th>
+                        <th>Submitted</th>
                         <th style="text-align: right;">Action</th>
                     </tr>
                 </thead>
@@ -127,13 +128,22 @@
                             <div style="font-size: 0.75rem; color: var(--text-muted);">
                                 {% if prayer.is_anonymous %}
                                     <em>[Anonymous]</em>
-                                {% else %}
+                                <span>{% else %}
                                     {{ prayer.name or 'Confidential' }}
                                 {% endif %}
                             </div>
                         </td>
                         <td>
                             <span class="badge badge-{{ prayer.status }}">{{ prayer.status|replace('_', ' ')|capitalize }}</span>
+                        </td>
+                        <td>
+                            {% if prayer.scheduled_at %}
+                                <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3); font-size: 0.75rem;">
+                                    🗓️ {{ prayer.scheduled_at.strftime('%b %d, %Y %I:%M %p') }}
+                                </span>
+                            {% else %}
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">—</span>
+                            {% endif %}
                         </td>
                         <td style="font-size: 0.775rem; color: var(--text-muted);">
                             {{ prayer.created_at.strftime('%b %d, %Y') if prayer.created_at else '-' }}
@@ -144,7 +154,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
                             No prayer requests submitted yet.
                         </td>
                     </tr>

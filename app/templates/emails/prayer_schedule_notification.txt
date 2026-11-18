@@ -1,0 +1,32 @@
+{# Plain-text prayer schedule notification. Variables: change_type, name, reference, category, date_str, time_str, previous_date_str, previous_time_str, timezone_label, org_name, contact_email -#}
+Dear {{ name }},
+
+{% if change_type == "scheduled" -%}
+Thank you for sharing your prayer request with {{ org_name }}. We have received it, and our prayer team has scheduled a time to pray for you.
+
+Scheduled date : {{ date_str }}
+Scheduled time : {{ time_str }} {{ timezone_label }}
+{% elif change_type == "rescheduled" -%}
+The prayer session for your request with {{ org_name }} has been rescheduled. Please note the updated date and time below.
+
+New date       : {{ date_str }}
+New time       : {{ time_str }} {{ timezone_label }}
+{% if previous_date_str %}Previously     : {{ previous_date_str }} at {{ previous_time_str }} {{ timezone_label }}
+{% endif -%}
+{% else -%}
+We would like to let you know that the prayer session previously scheduled for your request with {{ org_name }} has been cancelled.
+
+{% if previous_date_str %}Cancelled session : {{ previous_date_str }} at {{ previous_time_str }} {{ timezone_label }}
+{% endif %}
+Your prayer request remains with us and our team continues to keep you in prayer. We will reach out again if a new time is arranged.
+{% endif %}
+Reference      : {{ reference }}
+{% if category %}Category       : {{ category }}
+{% endif %}
+If you have any questions, simply reply to this email{% if contact_email %} or write to us at {{ contact_email }}{% endif %}.
+
+With prayers and blessings,
+{{ org_name }}
+
+--
+This is an automated notification regarding a prayer request you submitted.

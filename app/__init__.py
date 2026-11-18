@@ -23,6 +23,16 @@ def create_app(config_name=None):
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
     )
 
+    # Suppress verbose PyMongo internal logs to prevent multi-megabyte stderr.log growth
+    for pymongo_logger_name in [
+        "pymongo",
+        "pymongo.topology",
+        "pymongo.connection",
+        "pymongo.serverSelection",
+        "pymongo.command",
+    ]:
+        logging.getLogger(pymongo_logger_name).setLevel(logging.WARNING)
+
     # Initialize extensions
     init_db(app)
     login_manager.init_app(app)
@@ -91,7 +101,25 @@ def register_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_server_error(error):
-        logging.getLogger(__name__).error("Unhandled system error: %s", error)
+        logging.getLogger(__name__).exception("Unhandled HTTP 500 internal server error occurred")
         if request.is_json:
             return jsonify({"error": "Internal Error", "message": "An unexpected error occurred"}), 500
         return render_template("errors/500.html"), 500
+
+
+_default_app = None
+
+
+def __getattr__(name):
+    """
+    Provide module-level attribute resolution for WSGI servers and scripts
+    expecting 'app' or 'application' directly from the 'app' package.
+    """
+    global _default_app
+    if name in ("app", "application"):
+        if _default_app is None:
+            config_name = os.environ.get("FLASK_ENV", "production")
+            _default_app = create_app(config_name)
+        return _default_app
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
